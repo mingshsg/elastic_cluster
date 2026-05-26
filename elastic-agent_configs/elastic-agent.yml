@@ -1,0 +1,81 @@
+outputs:
+  default:
+    type: elasticsearch
+    hosts:
+      - "https://eshot01:9200"
+      - "https://eshot02:9200"
+      - "https://eshot03:9200"
+    username: elastic
+    password: Changed!
+    preset: balanced
+    ssl:
+      verification_mode: none
+      certificate: /usr/share/elastic-agent/certificates/server.pem
+      certificate_authorities: 
+        - /usr/share/elastic-agent/certificates/ca.pem
+      key: /usr/share/elastic-agent/certificates/server.decrypt.key
+
+inputs:
+  - type: system/metrics
+    id: elasticagent-metrics-input
+    data_stream.namespace: default
+    use_output: default
+    enabled: true
+    streams:
+      - metricsets:
+        - cpu
+        data_stream.dataset: system.cpu
+      - metricsets:
+        - memory
+        data_stream.dataset: system.memory
+      - metricsets:
+        - load
+        data_stream.dataset: system.load
+      - metricsets:
+        - network
+        data_stream.dataset: system.network
+      - metricsets:
+        - filesystem
+        data_stream.dataset: system.filesystem
+      - metricsets:
+        - process_summary
+        data_stream.dataset: system.process_summary
+      - metricsets:
+        - diskio
+        data_stream.dataset: system.diskio
+  - type: logfile
+    id: elasticagent-system-logs
+    name: "System Logs"
+    enabled: true
+    paths:
+      - "/var/log/*.log"
+      - "/var/log/syslog"
+      - "/var/log/auth.log"
+      - "/var/log/messages"
+
+    processors:
+      - add_host_metadata: {}
+      - add_fields:
+          fields:
+            log_source: "system"
+            log_from: "docker"
+      - drop_event:
+          when:
+            contains:
+              message: "DEBUG"  # Example: Drop debug logs
+
+agent:
+  monitoring:
+    enabled: true
+    logs: true
+    metrics: true
+
+fleet:
+  server:
+    host: "0.0.0.0"
+    port: 8220
+    ssl:
+      enabled: true
+      certificate: /usr/share/elastic-agent/certificates/server.pem
+      key: /usr/share/elastic-agent/certificates/server.decrypt.key
+

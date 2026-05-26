@@ -1,0 +1,232 @@
+name: elastic_apm_cluster
+
+services:
+  eshot01:
+    image: elastic/elasticsearch:9.4.0
+    container_name: a_eshot01
+    hostname: eshot01
+    environment:
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G -XX:UseSVE=0"
+      - CLI_JAVA_OPTS=-XX:UseSVE=0
+      - ELASTIC_PASSWORD=Changed!
+      - KIBANA_SYSTEM_PASSWORD=Changed!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+      - snapshot_folder:/usr/share/elasticsearch/snapshot/share_snap
+      - ./certificates:/usr/share/elasticsearch/config/certificates
+      - ./elasticsearch_configs/elasticsearch01.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9211:9200
+      - 9311:9300
+    networks:
+      - elastic_apm
+  eshot02:
+    image: elastic/elasticsearch:9.4.0
+    container_name: a_eshot02
+    hostname: eshot02
+    environment:
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G -XX:UseSVE=0"
+      - CLI_JAVA_OPTS=-XX:UseSVE=0
+      - ELASTIC_PASSWORD=Changed!
+      - KIBANA_SYSTEM_PASSWORD=Changed!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data02:/usr/share/elasticsearch/data
+      - snapshot_folder:/usr/share/elasticsearch/snapshot/share_snap
+      - ./certificates:/usr/share/elasticsearch/config/certificates
+      - ./elasticsearch_configs/elasticsearch02.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9212:9200
+      - 9312:9300
+    networks:
+      - elastic_apm
+
+  eshot03:
+    image: elastic/elasticsearch:9.4.0
+    container_name: a_eshot03
+    hostname: eshot03
+    environment:
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G -XX:UseSVE=0"
+      - CLI_JAVA_OPTS=-XX:UseSVE=0
+      - ELASTIC_PASSWORD=Changed!
+      - KIBANA_SYSTEM_PASSWORD=Changed!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data03:/usr/share/elasticsearch/data
+      - snapshot_folder:/usr/share/elasticsearch/snapshot/share_snap
+      - ./certificates:/usr/share/elasticsearch/config/certificates
+      - ./elasticsearch_configs/elasticsearch03.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9213:9200
+      - 9313:9300
+    networks:
+      - elastic_apm
+  
+  esfrozen01:
+    image: elastic/elasticsearch:9.4.0
+    container_name: a_esfrozen01
+    hostname: esfrozen01
+    environment:
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G -XX:UseSVE=0"
+      - CLI_JAVA_OPTS=-XX:UseSVE=0
+      - ELASTIC_PASSWORD=Changed!
+      - KIBANA_SYSTEM_PASSWORD=Changed!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data06:/usr/share/elasticsearch/data
+      - snapshot_folder:/usr/share/elasticsearch/snapshot/share_snap
+      - ./certificates:/usr/share/elasticsearch/config/certificates
+      - ./elasticsearch_configs/elasticsearch06.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9216:9200
+      - 9316:9300
+    networks:
+      - elastic_apm
+
+  kibana1:
+    image: elastic/kibana:9.4.0
+    container_name: a_kibana
+    hostname: kibana
+    depends_on:
+      - eshot01
+      - eshot02
+      - eshot03
+    environment:
+      - ELASTICSEARCH_PASSWORD=Changed!
+    ports:
+      - 5621:5601
+    volumes:
+      - kibana_logs1:/var/log
+      - ./certificates:/usr/share/kibana/config/certificates
+      - ./kibana_configs/kibana.yml:/usr/share/kibana/config/kibana.yml
+    ulimits:
+      nproc: 65535
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - elastic_apm
+
+  fleet:
+    image: elastic/elastic-agent:9.4.0
+    container_name: a_fleet_apm
+    hostname: fleet
+    depends_on:
+      - eshot01
+      - eshot02
+      - eshot03
+    ports:
+      - 8220:8220
+      - 8200:8200
+    environment:
+      - FLEET_SERVER_ENABLE=true
+      - FLEET_SERVER_PORT=8220
+      - FLEET_SERVER_ELASTICSEARCH_HOST=https://eshot02:9200
+      - FLEET_SERVER_ELASTICSEARCH_CA=/usr/share/elastic-agent/certificates/ca.pem
+      - KIBANA_CA=/usr/share/elastic-agent/certificates/ca.pem
+      - FLEET_SERVER_SERVICE_TOKEN=AAEAAWVsYXN0aWMvZmxlZXQtc2VydmVyL3Rva2VuLTE3NzU4MTg3NjU1NjY6Wkdjd2NVb1hSNnUzYkt6djRlVEFFdw
+      - FLEET_URL=https://fleet:8220
+      - ELASTIC_AGENT_TAGS=fleet,docker
+      - KIBANA_FLEET_SETUP=1
+      - FLEET_SERVER_INSECURE=true
+      - FLEET_SERVER_POLICY=fleet-server-policy
+      - FLEET_CA=/usr/share/elastic-agent/certificates/ca.pem
+      - FLEET_SERVER_CERT=/usr/share/elastic-agent/certificates/server.pem
+      - FLEET_SERVER_CERT_KEY=/usr/share/elastic-agent/certificates/server.decrypt.key
+    volumes:
+      - ./certificates:/usr/share/elastic-agent/certificates
+    networks:
+      - elastic_apm
+
+#  elastic_agent:
+#    image: elastic/elastic-agent:9.4.0
+#    user: root
+#    privileged: true
+#    container_name: a_elastic_agent
+#    hostname: elastic_agent
+#    depends_on:
+#      - fleet
+#    environment:
+#      - FLEET_ENROLL=1
+#      - FLEET_URL=https://fleet:8220
+#      - FLEET_CA=/usr/share/elastic-agent/certificates/ca.pem
+#      - FLEET_ENROLLMENT_TOKEN=dm13TmQ1MEJWSjQ2SHA1VW1LSWk6alhoZHluNXc0V29sU201MldvWEZoUQ==
+#      - ELASTIC_AGENT_TAGS=producer,https,docker
+#      - KIBANA_CA=/usr/share/elastic-agent/certificates/ca.pem
+#    volumes:
+#      - ./certificates:/usr/share/elastic-agent/certificates
+#  #    - ./elastic-agent_configs/elastic-agent.yml:/usr/share/elastic-agent/elastic-agent.yml
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#    networks:
+#      - elastic_apm
+
+  elastic_agent_complete:
+    image: elastic/elastic-agent-complete:9.4.0
+    user: root
+    privileged: true
+    container_name: a_elastic_agent_complete
+    hostname: elastic_agent_complete
+    depends_on:
+      - fleet
+    environment:
+      - FLEET_ENROLL=1
+      - FLEET_URL=https://fleet:8220
+      - FLEET_CA=/usr/share/elastic-agent/certificates/ca.pem
+      - FLEET_ENROLLMENT_TOKEN=dm13TmQ1MEJWSjQ2SHA1VW1LSWk6alhoZHluNXc0V29sU201MldvWEZoUQ==
+      - ELASTIC_AGENT_TAGS=producer,https,docker
+      - KIBANA_CA=/usr/share/elastic-agent/certificates/ca.pem
+    volumes:
+      - ./certificates:/usr/share/elastic-agent/certificates
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - elastic_apm
+
+  fix-permission:
+    image: python:3.12-slim
+    container_name: kfix-permission
+    restart: "no"
+    networks:
+      - elastic_apm
+    volumes:
+      - snapshot_folder:/usr/share/elasticsearch/snapshot/share_snap
+    command: >
+      bash -c "
+        echo RUNNING ...
+        chown -R 1000:1000 /usr/share/elasticsearch/snapshot/share_snap
+        echo DONE ...
+      "
+
+volumes:
+  data01:
+    driver: local
+  data02:
+    driver: local
+  data03:
+    driver: local
+  data06:
+    driver: local
+  kibana_logs1:
+    driver: local
+  kibana_logs2:
+    driver: local
+  snapshot_folder:
+    driver: local
+
+networks:
+  elastic_apm:
+    driver: bridge

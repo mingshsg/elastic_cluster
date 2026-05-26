@@ -1,0 +1,39 @@
+node.name: eshot02
+cluster.name: es-apm-cluster
+network.bind_host: 0.0.0.0
+transport.bind_host: 0.0.0.0
+transport.publish_host: 0.0.0.0
+discovery.seed_hosts: [ "eshot01","eshot03" ]
+cluster.initial_master_nodes: [ "eshot01","eshot02","eshot03" ]
+node.roles: ["master", "ingest", "transform", "data_hot", "data_content","remote_cluster_client"]
+bootstrap.memory_lock: true
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: none
+xpack.security.transport.ssl.certificate: /usr/share/elasticsearch/config/certificates/server.pem
+xpack.security.transport.ssl.key: /usr/share/elasticsearch/config/certificates/server.decrypt.key
+xpack.security.transport.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certificates/ca.pem"]
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.verification_mode: none
+xpack.security.http.ssl.certificate: /usr/share/elasticsearch/config/certificates/server.pem
+xpack.security.http.ssl.key: /usr/share/elasticsearch/config/certificates/server.decrypt.key
+xpack.security.http.ssl.certificate_authorities: ["/usr/share/elasticsearch/config/certificates/ca.pem"]
+#xpack.security.transport.ssl.key_passphrase: password
+#xpack.security.http.ssl.key_passphrase: password
+path.repo: ["/usr/share/elasticsearch/snapshot/share_snap"]
+#xpack.monitoring.collection.enabled: true
+#xpack.monitoring.exporters.local_cluster.type: local
+
+#xpack.security.audit.enabled: true
+#xpack.security.audit.logfile.events.emit_request_body: true
+
+#telemetry:
+#  tracing:
+#    enabled: true
+#  agent:
+#    server_url: http://fleet:8200
+#    verify_server_cert: false
+#    environment: docker
+#    transaction_sample_rate: 0.01
+#    breakdown_metrics: true
+#    service_name: elasticsearch

@@ -1,0 +1,31 @@
+server.name: kibana1
+server.host: 0.0.0.0
+elasticsearch.hosts: ["https://eshot01:9200","https://eshot02:9200","https://eshot03:9200","https://esfrozen01:9200"]
+#elasticsearch.hosts: ["https://eshot01:9200","https://eshot02:9200","https://eshot03:9200","https://escold01:9200","https://escold02:9200","https://esfrozen01:9200"]
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "Changed!"
+server.ssl.enabled: true
+server.ssl.certificate: "/usr/share/kibana/config/certificates/server.pem"
+server.ssl.key: "/usr/share/kibana/config/certificates/server.decrypt.key"
+elasticsearch.ssl.certificateAuthorities: [ "/usr/share/kibana/config/certificates/ca.pem" ]
+elasticsearch.ssl.verificationMode: none
+xpack.encryptedSavedObjects.encryptionKey: 4f8c3b9a8e7d4c5f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f
+#server.ssl.keyPassphrase: password
+elasticsearch.idleSocketTimeout: 300
+monitoring.ui.elasticsearch.username: monitoring
+monitoring.ui.elasticsearch.password: Changed!Monitor
+
+#xpack.security.audit.enabled: true
+
+#xpack.fleet.packages:
+#- name: apm
+#  version: latest
+#elastic:
+#  apm:
+#    active: true
+#    serverUrl: http://fleet:8200
+#    centralConfig: true
+#    breakdownMetrics: true
+#    transactionSampleRate: 1
+#    verifyServerCert: false
+#    environment: docker
